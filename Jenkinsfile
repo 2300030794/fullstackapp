@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK_HOME'
-        maven 'MAVEN_HOME'
+        jdk 'JDK_HOME'        // Ensure this is configured in Jenkins: Manage Jenkins > Global Tool Configuration
+        maven 'MAVEN_HOME'    // Same for Maven
     }
 
     environment {
@@ -19,9 +19,10 @@ pipeline {
     }
 
     stages {
+
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/srithars/fullstackapp.git', branch: 'master'
+                git url: 'https://github.com/2300030794/fullstackapp.git', branch: 'master'
             }
         }
 
@@ -53,7 +54,10 @@ pipeline {
         stage('Build Backend (Spring Boot WAR)') {
             steps {
                 dir("${env.BACKEND_DIR}") {
-                    sh 'mvn clean package'
+                    // ✅ Force update Maven dependencies and enable debug logging
+                    sh 'mvn clean package -U -X'
+
+                    // Copy the generated WAR file to the root workspace
                     sh "cp target/*.war ../../${BACKEND_WAR}"
                 }
             }
@@ -64,8 +68,8 @@ pipeline {
                 script {
                     sh """
                         curl -u ${TOMCAT_USER}:${TOMCAT_PASS} \\
-                          --upload-file ${BACKEND_WAR} \\
-                          "${TOMCAT_URL}/deploy?path=/springapp1&update=true"
+                             --upload-file ${BACKEND_WAR} \\
+                             "${TOMCAT_URL}/deploy?path=/springapp1&update=true"
                     """
                 }
             }
@@ -76,8 +80,8 @@ pipeline {
                 script {
                     sh """
                         curl -u ${TOMCAT_USER}:${TOMCAT_PASS} \\
-                          --upload-file ${FRONTEND_WAR} \\
-                          "${TOMCAT_URL}/deploy?path=/frontapp1&update=true"
+                             --upload-file ${FRONTEND_WAR} \\
+                             "${TOMCAT_URL}/deploy?path=/frontapp1&update=true"
                     """
                 }
             }
